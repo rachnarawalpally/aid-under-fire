@@ -1,0 +1,359 @@
+---
+title: "A Deep Dive into the Impact of Legislation on Humanitarian Aid Worker Deaths"
+format:
+  html:
+    toc: true
+    embed-resources: true
+    code-fold: true
+---
+
+```{python}
+import pandas as pd 
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+
+df = pd.read_csv("../DataSet/security_incidents.csv")
+#df.head()
+```
+
+### Breakdown of Aid Workers death by Year 
+```{python}
+# Create interactive line chart
+fig = go.Figure()
+# Grouping the data by Year and summing the Total killed column to get total deaths per year
+annual_deaths = df.groupby('Year')['Total killed'].sum().reset_index()
+
+fig.add_trace(go.Scatter(
+    x=annual_deaths['Year'],
+    y=annual_deaths['Total killed'],
+    mode='lines+markers',
+    name='Total Deaths',
+    line=dict(color='#E44E50', width=3),
+    marker=dict(size=8, color='white', line=dict(width=2, color='#E44E50')),
+    hovertemplate='Year: %{x}<br>Deaths: %{y}<extra></extra>'
+))
+
+# Customize layout
+fig.update_layout(
+    title='Total Humanitarian Aid Worker Deaths (1997–2025)',
+    xaxis_title='Year',
+    yaxis_title='Total Deaths',
+    template='plotly_white',
+    font=dict(size=14),
+    hovermode='x unified',
+    width=650,
+    height=400,
+    paper_bgcolor="#f9f9f9",  # off white background]
+    plot_bgcolor="#f9f9f9"
+)
+
+fig.show()
+```
+
+2023–2024 saw a dramatic spike in humanitarian aid worker deaths, reaching the highest point in the observed period. This surge is largely attributed to the wars in Gaza and Sudan. While the overall trend shows a general increase over time, there are noticeable fluctuations, with some years experiencing significant drops or local peaks. To better understand the dynamics of these changes, we will specifically examine the years 2003, 2014, 2016 and 2024,  each of which corresponds to notable variations in the data.
+
+### Top Ten Countries with the Highest Death in Aid Workers 
+```{python}
+import seaborn as sns
+# Prepare data
+grouped_by_country = df.groupby("Country")["Total killed"].sum().sort_values(ascending=False)
+top_10 = grouped_by_country.head(10).reset_index()
+
+# Set theme
+sns.set_theme(style="whitegrid", rc={
+    "axes.facecolor": "#f9f9f9",
+    "figure.facecolor": "#f9f9f9"
+})
+
+# Create plot
+plt.figure(figsize=(8.5, 6))
+sns.barplot(
+    data=top_10,
+    x="Total killed",
+    y="Country",
+    hue="Country",  # this links the palette to the bar labels
+    palette="Reds_r",
+    dodge=False,
+    legend=False
+)
+
+# Titles and labels
+plt.title('Top 10 Countries by Total Aid Worker Deaths', fontsize=16, weight='bold')
+plt.xlabel('Total Deaths')
+plt.ylabel('Country')
+# Remove borders
+sns.despine(left=True, bottom=True)
+plt.tight_layout()
+plt.show()
+```
+
+From the graph above, we can see that Afghanistan has the highest number of aid worker deaths, followed by Palestine, Syria, and South Sudan. These are regions with a high concentration of conflict and war. This trend reflects major geopolitical events such as post-9/11 warfare and the recent war in Gaza. To better understand the fluctuations in aid worker deaths, we will focus specifically on what was happening in these countries during the years 2003, 2014, 2016, and 2024. 
+
+### Key Legislation Passed to Protect Aid Workers (2003, 2014, 2016, 2024)
+```{python}
+import matplotlib.cm as cm
+focus_years = [2003, 2014, 2016, 2024]
+filtered_df = df[df["Year"].isin(focus_years)]
+deaths_by_year = filtered_df.groupby("Year")["Total killed"].sum().reset_index()
+
+# Vibrant red shades, in order of the 4 bars
+colors = ['#ff9999', '#ff6666', '#ff3333', '#cc0000']  # Nice, clean red tones
+
+# Plot
+fig, ax = plt.subplots(figsize=(8, 5), facecolor="#f9f9f9")
+ax.set_facecolor("#f9f9f9")
+plt.bar(deaths_by_year["Year"].astype(str), deaths_by_year["Total killed"], color=colors)
+plt.xlabel("Year")
+plt.ylabel("Total Aid Worker Deaths")
+plt.title("Total Aid Worker Deaths in Focus Years")
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+# Remove borders
+sns.despine(left=True, bottom=True)
+
+plt.tight_layout()
+plt.show()
+```
+
+| Year | Resolution            | Focus                                |
+|:-----|:----------------------|:-------------------------------------|
+| 2003 | UNSC Resolution 1502  | Protection of humanitarian workers   |
+| 2014 | UNSC Resolution 2175  | Condemned attacks on aid workers     |
+| 2016 | UNSC Resolution 2286  | Medical and humanitarian personnel   |
+| 2024 | UNSC Resolution 2730  | Aid worker protection accountability |
+
+### Can Laws Protect Aid Workers from Being Targeted?
+
+#### Aid Worker Death Trends Surrounding Legislation Years (2003, 2014, 2016, 2024)
+```{python}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.graph_objects as go
+
+focus_years = [2003, 2014, 2016, 2024]
+window_size = 5
+
+fig = go.Figure()
+shapes_by_year = []
+
+# Add one trace and shape per focus year
+for i, year in enumerate(focus_years):
+    window_df = df[(df["Year"] >= year - window_size) & (df["Year"] <= year + window_size)]
+    deaths_window = window_df.groupby("Year")["Total killed"].sum().reset_index()
+
+    fig.add_trace(go.Scatter(
+        x=deaths_window["Year"],
+        y=deaths_window["Total killed"],
+        mode="lines+markers",
+        name=f"{year}",
+        line=dict(width=2),
+        marker=dict(size=6, color="#E31C3E"),
+        visible=(i == 0)
+    ))
+    # Vertical line shape for the legislation year
+    shapes_by_year.append([
+        dict(
+            type="line",
+            x0=year,
+            x1=year,
+            y0=0,
+            y1=max(deaths_window["Total killed"]) + 10,
+            line=dict(color="#EE4465", width=2, dash="dash")
+        )
+    ])
+
+# Create slider steps with shapes
+steps = []
+for i, year in enumerate(focus_years):
+    step = dict(
+        method="update",
+        args=[
+            {"visible": [j == i for j in range(len(focus_years))]},
+            {"title": f"Aid Worker Deaths Around {year}",
+             "shapes": shapes_by_year[i]}
+        ],
+        label=str(year)
+    )
+    steps.append(step)
+
+# Final layout
+fig.update_layout(
+    sliders=[dict(
+        active=0,
+        pad={"t": 50},
+        steps=steps,
+        currentvalue={"prefix": "Year: "}
+    )],
+    title="Aid Worker Deaths Around Key Legislation Years",
+    xaxis_title="Year",
+    yaxis_title="Total Deaths",
+    template="simple_white",
+    shapes=shapes_by_year[0],
+    paper_bgcolor="#f9f9f9",
+    plot_bgcolor="#f9f9f9"
+)
+
+fig.show()
+
+```
+
+The charts above illustrate aid worker deaths in the years surrounding each of the four key pieces of legislation. As we can see, there was a sharp increase in deaths after 2003, following the adoption of UNSC Resolution 1502. This is in contrast to the patterns observed in 2014, 2016, and 2024, where no similar surge is immediately apparent. It's also worth noting that for 2024, the available data is still limited, with only one year of "after" data (2025) — making it too early to draw any meaningful conclusions.
+
+### Evidence of Impact: T-Test Results for Legislation
+```{python}
+# Filter data from 1998 to 2008 for comparison around in 2003
+window_df = df[(df["Year"] >= 1998) & (df["Year"] <= 2008)]
+
+# Aggregate total deaths per year
+deaths_window = window_df.groupby("Year")["Total killed"].sum().reset_index()
+
+# Add a column indicating whether the year is before or after the legislation
+deaths_window["Period"] = deaths_window["Year"].apply(lambda x: "Before" if x < 2003 else "After")
+
+# Calculate average deaths before and after
+avg_deaths = deaths_window.groupby("Period")["Total killed"].mean().reset_index().rename(columns={"Total killed": "Average Deaths"})
+
+# T-test to check statistical significance
+from scipy.stats import ttest_ind
+
+before_deaths = deaths_window[deaths_window["Period"] == "Before"]["Total killed"]
+after_deaths = deaths_window[deaths_window["Period"] == "After"]["Total killed"]
+t_stat, p_value = ttest_ind(before_deaths, after_deaths, equal_var=False)
+
+avg_deaths, t_stat, p_value
+```
+
+Running a t-test, we find that the only statistically significant p-value occurred in 2003. This indicates a significant increase in aid worker deaths following the adoption of UNSC Resolution 1502. Rather than reducing fatalities, the average number of deaths rose from 38.0 before to 83.7 after 2003 (t = -3.75, p = 0.0072). This suggests that the legislation did not lead to improved protection for humanitarian aid workers during that period. For the other focus years, 2014, 2016, and 2024, the p-values were not statistically significant. This means that any differences in death counts before and after the respective legislation in those years could be due to random variation, rather than the result of effective policy change. 
+
+```{python}
+# Set style
+sns.set_theme(style="whitegrid", context="talk")
+sns.set_palette("deep") 
+# Create plot
+fig, ax = plt.subplots(figsize=(8, 5), facecolor="#f9f9f9")
+ax.set_facecolor("#f9f9f9")
+# Line plot
+plt.plot(deaths_window["Year"], deaths_window["Total killed"], 
+         marker='o', linestyle='-', linewidth=2, 
+         markersize=6, color='#10EFD9', markerfacecolor='white', markeredgewidth=2)
+# Vertical line for 2003 legislation
+plt.axvline(x=2003, color='#EF1026', linestyle='--', linewidth=2, label="UNSC Resolution 1502 (2003)")
+
+# Titles and labels
+plt.title("Aid Worker Deaths (1998–2008) with 2003 Legislation Marker", fontsize=16, weight='bold')
+plt.xlabel("Year", fontsize=12)
+plt.ylabel("Total Aid Worker Deaths", fontsize=12)
+
+# Legend styling
+plt.legend(frameon=True, framealpha=0.9, facecolor='white', loc="upper left")
+
+# Grid, layout, and display
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.xticks(deaths_window["Year"], rotation=45)
+# Remove borders
+sns.despine(left=True, bottom=True)
+plt.tight_layout()
+plt.show()
+```
+
+As shown in the graph above, aid worker deaths after 2003 are significantly higher than those before 2003. This sharp increase highlights that legislation alone is not sufficient to prevent aid worker fatalities.
+
+### Digging Deeper: Which Aid Groups Are Most at Risk?
+```{python}
+import plotly.express as px
+# Define organization-related columns
+org_columns = ['UN', 'INGO', 'NNGO', 'ICRC', 'Other']
+# Melt the dataset to long format
+org_long = df[["Year", "Total killed"] + org_columns].melt(
+    id_vars=["Year", "Total killed"],
+    value_vars=org_columns,
+    var_name="Organization",
+    value_name="Involved"
+)
+
+# Filter only incidents where the org was involved
+org_long = org_long[org_long["Involved"] == 1]
+
+# Group by Year and Organization
+org_grouped = org_long.groupby(["Year", "Organization"])["Total killed"].sum().reset_index()
+
+# Pivot for area chart
+org_pivot = org_grouped.pivot(index="Year", columns="Organization", values="Total killed").fillna(0)
+
+# Compute total deaths across all orgs per year
+org_total_year = org_grouped.groupby("Year")["Total killed"].sum().reset_index().rename(columns={"Total killed": "Total All Orgs"})
+
+# Merge to get percent
+org_percent = org_grouped.merge(org_total_year, on="Year")
+org_percent["Percent"] = (org_percent["Total killed"] / org_percent["Total All Orgs"]) * 100
+
+# Define custom colors for each organization
+custom_colors = {
+    "ICRC": "#E21D51",    
+    "INGO": "#B4E21D",   
+    "Other": "#1DE2AE",   
+    "UN": "#4B1DE2",      
+    "NNGO": "#E88817"      
+}
+
+# Plot line chart with updated color map
+fig = px.line(
+    org_percent,
+    x="Year",
+    y="Percent",
+    color="Organization",
+    markers=True,
+    title="Percent of Aid Worker Deaths by Organization Type Each Year",
+    labels={"Percent": "Percent of Total Deaths"},
+    color_discrete_map=custom_colors
+)
+
+# Set background to white
+fig.update_layout(
+    plot_bgcolor='#f9f9f9',
+    paper_bgcolor='#f9f9f9',
+    xaxis=dict(showgrid=True, gridcolor='lightgray'),
+    yaxis=dict(showgrid=True, gridcolor='lightgray'),
+    legend_title="Organization",
+    hovermode="x unified"
+)
+
+fig.update_traces(line=dict(width=2))
+fig.show()
+```
+
+```{python}
+# Group by organization to compute total deaths
+org_grouped = org_long.groupby(["Year", "Organization"])["Total killed"].sum().reset_index()
+total_deaths_by_org = org_grouped.groupby("Organization")["Total killed"].sum().reset_index()
+total_deaths_by_org = total_deaths_by_org.sort_values("Total killed", ascending=True)
+# Define custom reds
+custom_reds = ["#ffcccc", "#ff6666", "#ff3333", "#cc0000", "#990000"]
+# Create the pretty horizontal bar chart
+sns.set_theme(style="whitegrid")
+fig, ax = plt.subplots(figsize=(8, 5), facecolor="#f9f9f9")
+ax.set_facecolor("#f9f9f9")
+barplot = sns.barplot(
+    data=total_deaths_by_org,
+    x="Total killed",
+    y="Organization",
+    hue="Organization", 
+     palette=custom_reds,
+    legend=False  
+)
+# Add value labels to each bar
+for index, value in enumerate(total_deaths_by_org["Total killed"]):
+    plt.text(value + 2, index, f"{int(value)}", va='center', fontsize=10)
+
+# Title and axis labels
+plt.title("Total Aid Worker Deaths (1997-2025) by Organization Type", fontsize=16)
+plt.xlabel("Total Deaths")
+plt.ylabel("Organization")
+
+# Remove borders and apply layout
+sns.despine(left=True, bottom=True)
+plt.tight_layout()
+plt.show()
+```
+
+### Conclusion
+The shifting distribution of aid worker deaths over the past two decades reveals a critical gap in the effectiveness of international protections. While UNSC resolutions and other global efforts aim to safeguard humanitarian actors, the data shows that international legislation tends to benefit international organizations, like the UN and INGOs, more directly. These groups often have the diplomatic backing, security infrastructure, and global visibility to leverage such protections. In contrast, National NGOs (NNGOs), whose staff are typically local and operating on the front lines, now account for an increasingly larger share of total deaths, particularly in recent years. This raises a troubling question: if the most vulnerable actors are not seeing the benefits of international legislation, then who is the system truly protecting? The growing proportion of deaths among local humanitarian staff suggests that while laws may exist on paper, their implementation and enforcement remain uneven, leaving national actors exposed to disproportionate risk. There is an urgent need for legislation that not only exists but equitably protects all humanitarian personnel, especially those most at risk. One way forward is to support community-driven protection strategies, rather than relying solely on top-down frameworks from the UN. Another is to give national aid workers a seat at the table in the creation of future legislation intended to protect humanitarian personnel. Overall, while international legislation has offered some protection to international aid workers, it has too often left national staff behind.

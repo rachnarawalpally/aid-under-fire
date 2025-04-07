@@ -1,0 +1,22 @@
+---
+title: "Citation"
+format:
+  html:
+    toc: true
+    code-fold: false
+---
+Breckenridge, M. J., Fairbanks, A., Czwarno, M., Harvey, P., Duque-Díez, M., & Stoddard, A. (2024). Aid Worker Security Report 2024: Balancing Advocacy and Security in Humanitarian Action.
+
+Hoelscher, K., Miklian, J., & Nygård, H. M. (2015). Understanding attacks on humanitarian aid workers. Conflict trends, 6.
+
+OpenAI. (2023). ChatGPT (Mar 14 version) [Large language model]. https://chat.openai.com/
+
+United Nations Security Council. (2003). Resolution 1502 (2003): Protection of United Nations personnel, associated personnel and humanitarian personnel in conflict zones. https://press.un.org/en/2003/sc7856.doc.htm
+
+United Nations Security Council. (2014). Resolution 2175 (2014): Protection of humanitarian personnel in armed conflict. https://press.un.org/en/2014/sc11544.doc.htm
+
+United Nations Security Council. (2016). Resolution 2286 (2016): Protection of medical and humanitarian personnel in armed conflict. https://press.un.org/en/2016/sc12347.doc.htm
+
+United Nations Security Council. (2024). Resolution 2730 (2024): Strengthening accountability for attacks on humanitarian aid workers. https://press.un.org/en/2024/sc15707.doc.htm
+
+

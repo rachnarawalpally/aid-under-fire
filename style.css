@@ -1,0 +1,30 @@
+/* Set a soft off-white background */
+body {
+    background-color: #f9f9f9;
+  }
+  
+  /* Soften heading colors with a rich red */
+  h1, h2, h3, h4 {
+    color: #C03F4A;  /* soft brick red */
+  }
+  
+  /* Change link colors (including navbar hover) */
+  a, a:visited {
+    color: #f9f9f9;
+  }
+  a:hover {
+    color: #f9f9f9;
+    text-decoration: underline;
+  }
+/*   
+  Style code blocks with a light background
+  pre, code {
+    background-color: #f4f4f4;
+    color: #333;
+  } */
+
+/* Set background color of the navbar */
+.navbar {
+    background-color: #e36262; /* Soft red/beige tone – adjust to your palette */
+  }
+  

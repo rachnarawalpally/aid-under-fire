@@ -1,0 +1,19 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Aid Under Fire"
+  navbar:
+    left:
+      - text: Analysis
+        href: index.qmd
+      - text: Citation
+        href: pages/about.qmd
+  search: true
+
+format:
+  html:
+    theme: litera
+    toc: true
+    css: style.css
